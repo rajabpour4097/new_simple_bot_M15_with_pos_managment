@@ -615,14 +615,14 @@ def main():
                     
                     # بررسی نتیجه فیلتر
                     if m15_action == 'REJECT':
-                        log(f'❌ Signal REJECTED by M15 filter: {m15_reason}', color='red')
+                        log(f'❌ Signal REJECTED by M15+H4 combined filter: {m15_reason}', color='red')
                         # ارسال ایمیل اطلاع‌رسانی رد سیگنال
                         try:
                             m15_email_info = format_m15_email_info(m15_action, m15_reason, m15_info, 'buy', '')
                             send_trade_email_async(
                                 subject=f"SIGNAL REJECTED - BUY {MT5_CONFIG['symbol']}",
                                 body=(
-                                    f"❌ TRADING SIGNAL REJECTED BY M15 FILTER ❌\n\n"
+                                    f"❌ TRADING SIGNAL REJECTED BY M15+H4 COMBINED FILTER ❌\n\n"
                                     f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
                                     f"Symbol: {MT5_CONFIG['symbol']}\n"
                                     f"Original Signal: BUY (Bullish Swing)\n"
@@ -654,20 +654,20 @@ def main():
                     
                     log(f'Final trade: {trade_type.upper()} | SL={trade_sl:.5f} | TP={trade_tp:.5f}', color='cyan')
                     
-                    # لاگ سیگنال با اطلاعات نهایی (بعد از M15 filter)
+                    # لاگ سیگنال با اطلاعات نهایی (بعد از M15+H4 combined filter)
                     try:
                         log_signal(
                             symbol=MT5_CONFIG['symbol'],
-                            strategy="swing_fib_v1_m15_s2",
+                            strategy="swing_fib_v1_m15h4_s2",
                             direction=trade_type,  # جهت نهایی (buy یا sell)
                             rr=win_ratio,
                             entry=buy_entry_price,
                             sl=trade_sl,  # SL نهایی
                             tp=trade_tp,  # TP نهایی
                             fib=state.fib_levels,
-                            confidence=m15_info.get('body_ratio', None) if m15_info else None,
+                            confidence=m15_info.get('m15', {}).get('body_ratio', None) if m15_info else None,
                             features_json=None,
-                            note=f"original_signal:buy|m15_action:{m15_action}|m15_dir:{m15_info.get('direction', 'N/A') if m15_info else 'N/A'}|final_dir:{trade_type}"
+                            note=f"original_signal:buy|m15_action:{m15_action}|m15_dir:{m15_info.get('m15', {}).get('direction', 'N/A') if m15_info else 'N/A'}|h4_dir:{m15_info.get('h4', {}).get('direction', 'N/A') if m15_info else 'N/A'}|final_dir:{trade_type}"
                         )
                     except Exception as e:
                         log(f'log_signal failed: {e}', color='yellow')
@@ -847,14 +847,14 @@ def main():
                     
                     # بررسی نتیجه فیلتر
                     if m15_action == 'REJECT':
-                        log(f'❌ Signal REJECTED by M15 filter: {m15_reason}', color='red')
+                        log(f'❌ Signal REJECTED by M15+H4 combined filter: {m15_reason}', color='red')
                         # ارسال ایمیل اطلاع‌رسانی رد سیگنال
                         try:
                             m15_email_info = format_m15_email_info(m15_action, m15_reason, m15_info, 'sell', '')
                             send_trade_email_async(
                                 subject=f"SIGNAL REJECTED - SELL {MT5_CONFIG['symbol']}",
                                 body=(
-                                    f"❌ TRADING SIGNAL REJECTED BY M15 FILTER ❌\n\n"
+                                    f"❌ TRADING SIGNAL REJECTED BY M15+H4 COMBINED FILTER ❌\n\n"
                                     f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
                                     f"Symbol: {MT5_CONFIG['symbol']}\n"
                                     f"Original Signal: SELL (Bearish Swing)\n"
@@ -886,20 +886,20 @@ def main():
                     
                     log(f'Final trade: {trade_type.upper()} | SL={trade_sl:.5f} | TP={trade_tp:.5f}', color='cyan')
                     
-                    # لاگ سیگنال با اطلاعات نهایی (بعد از M15 filter)
+                    # لاگ سیگنال با اطلاعات نهایی (بعد از M15+H4 combined filter)
                     try:
                         log_signal(
                             symbol=MT5_CONFIG['symbol'],
-                            strategy="swing_fib_v1_m15_s2",
+                            strategy="swing_fib_v1_m15h4_s2",
                             direction=trade_type,  # جهت نهایی (buy یا sell)
                             rr=win_ratio,
                             entry=sell_entry_price,
                             sl=trade_sl,  # SL نهایی
                             tp=trade_tp,  # TP نهایی
                             fib=state.fib_levels,
-                            confidence=m15_info.get('body_ratio', None) if m15_info else None,
+                            confidence=m15_info.get('m15', {}).get('body_ratio', None) if m15_info else None,
                             features_json=None,
-                            note=f"original_signal:sell|m15_action:{m15_action}|m15_dir:{m15_info.get('direction', 'N/A')}|final_dir:{trade_type}"
+                            note=f"original_signal:sell|m15_action:{m15_action}|m15_dir:{m15_info.get('m15', {}).get('direction', 'N/A') if m15_info else 'N/A'}|h4_dir:{m15_info.get('h4', {}).get('direction', 'N/A') if m15_info else 'N/A'}|final_dir:{trade_type}"
                         )
                     except Exception as e:
                         log(f'log_signal failed: {e}', color='yellow')

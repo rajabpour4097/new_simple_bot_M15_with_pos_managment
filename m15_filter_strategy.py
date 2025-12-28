@@ -334,10 +334,10 @@ def apply_m15_h4_combined_filter(
 def format_m15_email_info(action: str, reason: str, m15_info: Dict, 
                           original_direction: str, final_direction: str) -> str:
     """
-    فرمت کردن اطلاعات M15 برای ایمیل
+    فرمت کردن اطلاعات M15+H4 Combined Filter برای ایمیل
     """
     if not m15_info:
-        return "M15 Info: Not available\n"
+        return "M15+H4 Filter Info: Not available\n"
     
     status_emoji = {
         'EXECUTE_ORIGINAL': '✅',
@@ -345,20 +345,42 @@ def format_m15_email_info(action: str, reason: str, m15_info: Dict,
         'REJECT': '❌'
     }.get(action, '❓')
     
+    # استخراج اطلاعات M15 و H4
+    m15_data = m15_info.get('m15', {})
+    h4_data = m15_info.get('h4', {})
+    
     lines = [
-        f"\n📊 M15 Filter Analysis:",
+        f"\n📊 M15+H4 Combined Filter Analysis:",
         f"   Status: {status_emoji} {action}",
         f"   Reason: {reason}",
-        f"   M15 Candle Time: {m15_info.get('time', 'N/A')}",
-        f"   M15 Direction: {m15_info.get('direction', 'N/A')}",
-        f"   M15 Body Strength: {m15_info.get('body_ratio', 0):.1f}%",
         f"   Original Signal: {original_direction.upper()}",
     ]
     
+    # اطلاعات M15
+    if m15_data:
+        lines.extend([
+            f"\n   🕐 M15 Candle:",
+            f"      Time: {m15_data.get('time', 'N/A')}",
+            f"      Direction: {m15_data.get('direction', 'N/A')}",
+            f"      Body Strength: {m15_data.get('body_ratio', 0):.1f}%",
+        ])
+    
+    # اطلاعات H4
+    if h4_data:
+        lines.extend([
+            f"\n   🕓 H4 Candle:",
+            f"      Time: {h4_data.get('time', 'N/A')}",
+            f"      Direction: {h4_data.get('direction', 'N/A')}",
+            f"      Body Strength: {h4_data.get('body_ratio', 0):.1f}%",
+        ])
+    
+    # نتیجه نهایی
     if action == 'EXECUTE_REVERSED':
-        lines.append(f"   Final Direction: {final_direction.upper()} (REVERSED)")
+        lines.append(f"\n   ✅ Final Direction: {final_direction.upper()} (REVERSED by M15)")
     elif action == 'EXECUTE_ORIGINAL':
-        lines.append(f"   Final Direction: {final_direction.upper()} (ALIGNED)")
+        lines.append(f"\n   ✅ Final Direction: {final_direction.upper()} (ALIGNED with both)")
+    elif action == 'REJECT':
+        lines.append(f"\n   ❌ Signal REJECTED (Failed filter criteria)")
     
     return '\n'.join(lines) + '\n'
 
