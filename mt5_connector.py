@@ -137,6 +137,21 @@ class MT5Connector:
     def try_all_filling_modes(self, request):
         tried = []
         modes = self.get_supported_filling_modes()
+        
+        # بررسی اتصال MT5 قبل از ارسال سفارش
+        if not mt5.terminal_info():
+            print("❌ [order_send] MT5 terminal not connected!")
+            return None
+        
+        # بررسی وضعیت symbol
+        symbol_info = mt5.symbol_info(request.get("symbol"))
+        if symbol_info is None:
+            print(f"❌ [order_send] Symbol {request.get('symbol')} info unavailable!")
+            return None
+        
+        if not symbol_info.visible:
+            print(f"❌ [order_send] Symbol {request.get('symbol')} not visible in Market Watch!")
+            return None
 
         # 1) اول مدهای اعلام‌شده‌ی بروکر
         for m in modes:
@@ -167,6 +182,12 @@ class MT5Connector:
                 return res
 
         print(f"[order_send] filling mode attempts: {tried}")
+        
+        # چاپ خطای دقیق MT5
+        last_error = mt5.last_error()
+        if last_error:
+            print(f"[order_send] MT5 last_error: {last_error}")
+        
         return res  # آخرین نتیجه
 
     # ---------- Stop validation ----------

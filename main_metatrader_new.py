@@ -941,7 +941,7 @@ def main():
                         log(f'Email dispatch failed: {_e}', color='red')
                     
                     if result and getattr(result, 'retcode', None) == 10009:
-                        log(f'✅ SELL order executed successfully', color='green')
+                        log(f'✅ {trade_type.upper()} order executed successfully', color='green')
                         log(f'📊 Ticket={result.order} Price={result.price} Volume={result.volume}', color='cyan')
                         # ارسال ایمیل غیرمسدودکننده
                         # try:
@@ -957,9 +957,9 @@ def main():
                         #     log(f'Email dispatch failed: {_e}', color='red')
                     else:
                         if result:
-                            log(f'❌ SELL failed retcode={result.retcode} comment={result.comment}', color='red')
+                            log(f'❌ {trade_type.upper()} failed retcode={result.retcode} comment={result.comment}', color='red')
                         else:
-                            log(f'❌ SELL failed (no result object)', color='red')
+                            log(f'❌ {trade_type.upper()} failed (no result object)', color='red')
                     state.reset()
 
                     reset_state_and_window()
