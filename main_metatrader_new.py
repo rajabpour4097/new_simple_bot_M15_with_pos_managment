@@ -14,7 +14,7 @@ import inspect, os
 from metatrader5_config import MT5_CONFIG, TRADING_CONFIG, DYNAMIC_RISK_CONFIG
 from email_notifier import send_trade_email_async
 from analytics.hooks import log_signal, log_position_event
-from m15_filter_strategy import apply_m15_h4_combined_filter, format_m15_email_info
+from m15_filter_strategy import apply_m15_filter, format_m15_email_info
 
 
 
@@ -602,8 +602,8 @@ def main():
                     log(f'Original stop = {stop}', color='green')
                     log(f'Original reward_end = {reward_end}', color='green')
 
-                    # === اعمال فیلتر M15+H4 ترکیبی (استراتژی S2 بهبود یافته) ===
-                    m15_action, m15_reason, final_sl, final_tp, final_direction, m15_info = apply_m15_h4_combined_filter(
+                    # === اعمال فیلتر M15 (استراتژی S2) ===
+                    m15_action, m15_reason, final_sl, final_tp, final_direction, m15_info = apply_m15_filter(
                         signal_direction='buy',
                         entry_price=buy_entry_price,
                         original_sl=stop,
@@ -611,18 +611,18 @@ def main():
                         symbol=MT5_CONFIG['symbol']
                     )
                     
-                    log(f'📊 M15+H4 Filter Result: {m15_action} - {m15_reason}', color='cyan')
+                    log(f'📊 M15 Filter Result: {m15_action} - {m15_reason}', color='cyan')
                     
                     # بررسی نتیجه فیلتر
                     if m15_action == 'REJECT':
-                        log(f'❌ Signal REJECTED by M15+H4 combined filter: {m15_reason}', color='red')
+                        log(f'❌ Signal REJECTED by M15 filter: {m15_reason}', color='red')
                         # ارسال ایمیل اطلاع‌رسانی رد سیگنال
                         try:
                             m15_email_info = format_m15_email_info(m15_action, m15_reason, m15_info, 'buy', '')
                             send_trade_email_async(
                                 subject=f"SIGNAL REJECTED - BUY {MT5_CONFIG['symbol']}",
                                 body=(
-                                    f"❌ TRADING SIGNAL REJECTED BY M15+H4 COMBINED FILTER ❌\n\n"
+                                    f"❌ TRADING SIGNAL REJECTED BY M15 FILTER ❌\n\n"
                                     f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
                                     f"Symbol: {MT5_CONFIG['symbol']}\n"
                                     f"Original Signal: BUY (Bullish Swing)\n"
@@ -654,7 +654,7 @@ def main():
                     
                     log(f'Final trade: {trade_type.upper()} | SL={trade_sl:.5f} | TP={trade_tp:.5f}', color='cyan')
                     
-                    # لاگ سیگنال با اطلاعات نهایی (بعد از M15+H4 combined filter)
+                    # لاگ سیگنال با اطلاعات نهایی (بعد از M15 filter)
                     try:
                         log_signal(
                             symbol=MT5_CONFIG['symbol'],
@@ -834,8 +834,8 @@ def main():
                     log(f'Original stop = {stop}', color='red')
                     log(f'Original reward_end = {reward_end}', color='red')
 
-                    # === اعمال فیلتر M15+H4 ترکیبی (استراتژی S2 بهبود یافته) ===
-                    m15_action, m15_reason, final_sl, final_tp, final_direction, m15_info = apply_m15_h4_combined_filter(
+                    # === اعمال فیلتر M15 (استراتژی S2) ===
+                    m15_action, m15_reason, final_sl, final_tp, final_direction, m15_info = apply_m15_filter(
                         signal_direction='sell',
                         entry_price=sell_entry_price,
                         original_sl=stop,
@@ -843,18 +843,18 @@ def main():
                         symbol=MT5_CONFIG['symbol']
                     )
                     
-                    log(f'📊 M15+H4 Filter Result: {m15_action} - {m15_reason}', color='cyan')
+                    log(f'📊 M15 Filter Result: {m15_action} - {m15_reason}', color='cyan')
                     
                     # بررسی نتیجه فیلتر
                     if m15_action == 'REJECT':
-                        log(f'❌ Signal REJECTED by M15+H4 combined filter: {m15_reason}', color='red')
+                        log(f'❌ Signal REJECTED by M15 filter: {m15_reason}', color='red')
                         # ارسال ایمیل اطلاع‌رسانی رد سیگنال
                         try:
                             m15_email_info = format_m15_email_info(m15_action, m15_reason, m15_info, 'sell', '')
                             send_trade_email_async(
                                 subject=f"SIGNAL REJECTED - SELL {MT5_CONFIG['symbol']}",
                                 body=(
-                                    f"❌ TRADING SIGNAL REJECTED BY M15+H4 COMBINED FILTER ❌\n\n"
+                                    f"❌ TRADING SIGNAL REJECTED BY M15 FILTER ❌\n\n"
                                     f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
                                     f"Symbol: {MT5_CONFIG['symbol']}\n"
                                     f"Original Signal: SELL (Bearish Swing)\n"
@@ -886,7 +886,7 @@ def main():
                     
                     log(f'Final trade: {trade_type.upper()} | SL={trade_sl:.5f} | TP={trade_tp:.5f}', color='cyan')
                     
-                    # لاگ سیگنال با اطلاعات نهایی (بعد از M15+H4 combined filter)
+                    # لاگ سیگنال با اطلاعات نهایی (بعد از M15 filter)
                     try:
                         log_signal(
                             symbol=MT5_CONFIG['symbol'],

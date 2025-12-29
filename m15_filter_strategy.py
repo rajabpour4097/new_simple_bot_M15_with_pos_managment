@@ -153,6 +153,78 @@ def get_last_completed_h4_candle(symbol: str) -> Optional[Dict]:
         return None
 
 
+def apply_m15_filter(
+    signal_direction: str,  # 'buy' یا 'sell'
+    entry_price: float,
+    original_sl: float,
+    win_ratio: float,
+    symbol: str
+) -> Tuple[str, str, float, float, str, Dict]:
+    """
+    اعمال فیلتر M15 (استراتژی S2) - بدون H4
+    
+    سیگنال را بر اساس آخرین کندل M15 فیلتر می‌کند:
+    - اگر M15 موافق سیگنال: اجرای عادی
+    - اگر M15 مخالف و body >= 50%: معکوس کردن
+    - اگر M15 مخالف و body < 50%: رد
+    
+    Returns:
+        tuple: (action, reason, final_sl, final_tp, final_direction, m15_info)
+            action: 'EXECUTE_ORIGINAL', 'EXECUTE_REVERSED', 'REJECT'
+    """
+    # گام 1: دریافت کندل M15
+    m15 = get_last_completed_m15_candle(symbol)
+    
+    # بررسی دسترسی به داده
+    if m15 is None:
+        log(f"⚠️ Could not get M15 candle - REJECTING signal", color='yellow')
+        return ('REJECT', 'M15 data unavailable', 0, 0, '', {})
+    
+    log(f"📊 M15: time={m15['time']} dir={m15['direction']} body={m15['body_ratio']:.1f}%", color='cyan')
+    
+    # بررسی همروندی M15 با سیگنال
+    expected_m15_direction = 'bullish' if signal_direction == 'buy' else 'bearish'
+    is_m15_aligned = (m15['direction'] == expected_m15_direction)
+    
+    stop_distance = abs(entry_price - original_sl)
+    
+    # تعیین جهت نهایی پس از فیلتر M15
+    if is_m15_aligned:
+        # M15 موافق - جهت تغییر نمی‌کند
+        log(f"✅ M15 ALIGNED: {m15['direction']}", color='green')
+        
+        if signal_direction == 'buy':
+            final_sl = entry_price - stop_distance
+            final_tp = entry_price + (stop_distance * win_ratio)
+        else:
+            final_sl = entry_price + stop_distance
+            final_tp = entry_price - (stop_distance * win_ratio)
+        
+        return ('EXECUTE_ORIGINAL', f"M15 aligned ({m15['direction']}, body={m15['body_ratio']:.1f}%)", 
+                final_sl, final_tp, signal_direction, m15)
+    
+    else:
+        # M15 مخالف - بررسی قدرت برای معکوس
+        if m15['body_ratio'] >= 50:
+            # معکوس
+            log(f"🔄 M15 REVERSE: {m15['direction']} body={m15['body_ratio']:.1f}%", color='blue')
+            m15_final_direction = 'sell' if signal_direction == 'buy' else 'buy'
+            
+            if m15_final_direction == 'buy':
+                final_sl = entry_price - stop_distance
+                final_tp = entry_price + (stop_distance * win_ratio)
+            else:
+                final_sl = entry_price + stop_distance
+                final_tp = entry_price - (stop_distance * win_ratio)
+            
+            return ('EXECUTE_REVERSED', f"M15 opposite strong (body={m15['body_ratio']:.1f}%) - REVERSED to {m15_final_direction.upper()}", 
+                    final_sl, final_tp, m15_final_direction, m15)
+        else:
+            # رد
+            log(f"❌ M15 REJECT: weak body {m15['body_ratio']:.1f}%", color='red')
+            return ('REJECT', f"M15 opposite weak body {m15['body_ratio']:.1f}%", 0, 0, '', m15)
+
+
 def apply_m15_h4_combined_filter(
     signal_direction: str,  # 'buy' یا 'sell'
     entry_price: float,
